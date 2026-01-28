@@ -844,7 +844,7 @@ const App: React.FC = () => {
           <div className="md:hidden w-full h-full flex flex-col pt-16 pb-20 bg-[#f5f5f4]">
              {/* Poster Area: Takes available space, ensures full visibility */}
              <div className="flex-1 w-full min-h-0 flex items-center justify-center p-6">
-                 <img src={ASSETS.poster} alt="Poster" className="w-full h-full object-contain shadow-xl" />
+                 <img src={ASSETS.poster} alt="Poster" className="max-w-full max-h-full object-contain shadow-xl w-auto h-auto" />
              </div>
              
              {/* Controls Area: Compact buttons */}
