@@ -21,7 +21,7 @@ const ASSETS = {
 };
 
 // CONTACT EMAIL ADDRESS
-const CONTACT_EMAIL = "hello@nonna-film.de"; // TODO: Change this to the real email address
+const CONTACT_EMAIL = "contact@nonna-film.de"; // TODO: Change this to the real email address
 
 // Mapping for Technical Specs Translations
 const SPEC_LABELS: Record<Language, Record<string, string>> = {
@@ -708,6 +708,15 @@ const App: React.FC = () => {
           <div className="prose prose-stone prose-lg leading-loose">{content.synopsis}</div>
       </FullScreenModal>
       
+      {/* ADDED: LOGLINE MODAL */}
+      <FullScreenModal isOpen={activeModal === 'logline'} onClose={() => setActiveModal(null)} title="Logline">
+          <div className="flex items-center justify-center h-full">
+               <h2 className="text-2xl md:text-3xl font-serif italic text-stone-900 leading-relaxed text-center px-4 border-l-4 border-[#F8C300] pl-6">
+                  {content.logline}
+               </h2>
+          </div>
+      </FullScreenModal>
+
       <FullScreenModal isOpen={activeModal === 'festivals'} onClose={() => setActiveModal(null)} title="Festivals">
           <FestivalList />
       </FullScreenModal>
@@ -831,22 +840,26 @@ const App: React.FC = () => {
         
         {/* SECTION 0: FILM */}
         <section className="h-screen w-full relative flex items-center justify-center overflow-hidden bg-[#f5f5f4]">
-          <div className="md:hidden w-full h-full flex flex-col landscape:flex-row relative pt-16">
-             <div className="flex-1 w-full landscape:w-1/2 landscape:h-full relative flex items-center justify-center bg-[#f5f5f4]">
-                 <img src={ASSETS.poster} alt="Poster" className="w-full h-full object-cover object-top landscape:object-contain landscape:max-h-[90vh]" />
-                 <div className="absolute inset-0 bg-gradient-to-t from-[#f5f5f4] via-transparent to-transparent landscape:hidden"></div>
+          {/* MOBILE VIEW REFACTORED: FULL POSTER & BUTTONS */}
+          <div className="md:hidden w-full h-full flex flex-col pt-16 pb-20 bg-[#f5f5f4]">
+             {/* Poster Area: Takes available space, ensures full visibility */}
+             <div className="flex-1 w-full min-h-0 flex items-center justify-center p-6">
+                 <img src={ASSETS.poster} alt="Poster" className="w-full h-full object-contain shadow-xl" />
              </div>
-             <div className="w-full landscape:w-1/2 px-6 pb-24 z-10 landscape:pb-0 landscape:pr-20 landscape:h-full landscape:overflow-hidden landscape:flex landscape:flex-col">
-                 <div className="landscape:flex-1 landscape:flex landscape:items-center">
-                    <h2 className="text-xl font-serif italic text-stone-900 leading-snug mb-6 landscape:mb-0 border-l-4 border-[#F8C300] pl-4">
-                        {content.logline}
-                    </h2>
+             
+             {/* Controls Area: Compact buttons */}
+             <div className="shrink-0 px-6 pb-6 w-full space-y-3 z-20">
+                 {/* Trailer - Primary Action */}
+                 <button onClick={() => setShowTrailer(true)} className="w-full bg-stone-900 text-white py-4 uppercase tracking-widest text-xs font-bold hover:bg-[#F8C300] hover:text-stone-900 transition-colors">
+                     {lang === 'en' ? "Watch Trailer" : "Trailer ansehen"}
+                 </button>
+                 
+                 {/* Secondary Actions Grid */}
+                 <div className="grid grid-cols-2 gap-3">
+                     <button onClick={() => setActiveModal('logline')} className="border border-stone-300 py-3 uppercase tracking-widest text-xs hover:bg-[#F8C300] transition-colors">Logline</button>
+                     <button onClick={() => setActiveModal('synopsis')} className="border border-stone-300 py-3 uppercase tracking-widest text-xs hover:bg-[#F8C300] transition-colors">Synopsis</button>
                  </div>
-                 <div className="grid grid-cols-2 gap-3 landscape:gap-y-4 landscape:gap-x-3 landscape:pb-6">
-                     <button onClick={() => setShowTrailer(true)} className="col-span-2 bg-stone-900 text-white py-3 landscape:py-2 uppercase tracking-widest text-xs font-bold">{lang === 'en' ? "Watch Trailer" : "Trailer ansehen"}</button>
-                     <button onClick={() => setActiveModal('synopsis')} className="border border-stone-300 py-3 landscape:py-2 uppercase tracking-widest text-xs hover:bg-[#F8C300] transition-colors">Synopsis</button>
-                     <button onClick={() => setActiveModal('festivals')} className="border border-stone-300 py-3 landscape:py-2 uppercase tracking-widest text-xs hover:bg-[#F8C300] transition-colors">Festivals</button>
-                 </div>
+                 <button onClick={() => setActiveModal('festivals')} className="w-full border border-stone-300 py-3 uppercase tracking-widest text-xs hover:bg-[#F8C300] transition-colors">Festivals</button>
              </div>
           </div>
           
@@ -947,8 +960,12 @@ const App: React.FC = () => {
         <section className="h-screen w-full bg-white flex items-center justify-center px-6 md:px-20 overflow-hidden text-stone-900">
             <div className="max-w-7xl mx-auto w-full h-full max-h-[90vh] flex flex-col pt-16 md:pt-10">
                 
-                {/* Mobile View: Modal Buttons Only */}
+                {/* Mobile View: Modal Buttons Only - REORDERED: Screenings -> Upcoming -> Past */}
                 <div className="md:hidden w-full h-full flex flex-col justify-center px-6 pt-16 pb-20 space-y-4 landscape:justify-center landscape:pt-0 landscape:pb-0 landscape:h-full landscape:overflow-y-auto">
+                    <ModalButton 
+                        label={lang === 'en' ? 'Cinema Screenings' : 'Kinovorstellungen'} 
+                        onClick={() => setActiveModal('all_screenings')} 
+                    />
                     <ModalButton 
                         label={lang === 'en' ? 'Upcoming Events' : 'Anstehende Termine'} 
                         onClick={() => setActiveModal('upcoming_events')} 
@@ -956,10 +973,6 @@ const App: React.FC = () => {
                     <ModalButton 
                         label={lang === 'en' ? 'Past Events' : 'Vergangene Termine'} 
                         onClick={() => setActiveModal('past_events')} 
-                    />
-                    <ModalButton 
-                        label={lang === 'en' ? 'Cinema Screenings' : 'Kinovorstellungen'} 
-                        onClick={() => setActiveModal('all_screenings')} 
                     />
                 </div>
 
