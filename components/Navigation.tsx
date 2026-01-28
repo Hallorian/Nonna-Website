@@ -28,9 +28,10 @@ export const Navigation: React.FC<NavigationProps> = ({ lang, setLang, activeSec
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // Updated Nav Items including the new 'Quotes' section
+  // Updated Nav Items including the new 'Events' and 'Quotes' section
   const allNavItems = [
     { id: 'film', label: lang === 'en' ? 'The Film' : 'Der Film' },
+    { id: 'events', label: lang === 'en' ? 'Events' : 'Termine' },
     { id: 'quotes', label: lang === 'en' ? 'Reviews' : 'Stimmen' },
     { id: 'stills', label: 'Stills' },
     { id: 'director', label: lang === 'en' ? 'Director' : 'Regie' },

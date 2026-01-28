@@ -6,6 +6,20 @@ export interface Quote {
   text: string[];
 }
 
+export interface EventItem {
+  title: string;
+  subtitle?: string;
+  date?: string;
+}
+
+export interface ScreeningItem {
+  city: string;
+  cinema: string;
+  date: string;
+  time: string;
+  link?: string;
+}
+
 export interface FilmData {
   logline: string;
   synopsis: string;
@@ -21,8 +35,13 @@ export interface FilmData {
     language: string;
     subtitles: string;
   };
-  festivals: string[];
+  festivals: string[]; // Keep for legacy or synopsis modal usage if needed, or sync with new events
   filmography: string[];
+  
+  // New Fields
+  pastEvents: EventItem[];
+  upcomingEvents: EventItem[];
+  screenings: ScreeningItem[];
 }
 
 export interface Content {

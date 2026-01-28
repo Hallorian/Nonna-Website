@@ -60,11 +60,11 @@ export const TEXT_CONTENT: Content = {
         source: "Luhze",
         text: [
           "Vincent Graf portrays his Italian grandmother Rosa – tough, grumpy and quite funny. Her bed and breakfast becomes a monument to an entire generation. [...]",
-          "What could easily begin as a sentimental family story turns out to be a precise, witty and deeply melancholic study of loneliness, pride and the failure of the concept of home. [...]",
+          "What could easily begin as a sentimental family story turns out to be a precise, witty and deeply melancholische study of loneliness, pride and the failure of the concept of home. [...]",
           "Slowness is the order of the day. It forces us to think at Rosa’s pace – the pace of a woman who is no longer in a hurry, but also has no destination. Nonna is a portrait of stagnation – but one that lives, pulsates and contradicts. [...]",
           "Between possession and loss, home and uprooting, laughter and sighs, Nonna oscillates back and forth like the sea that Rosa loves. And we, the audience, stand on the shore and know: this is what lived history looks like. [...]",
           "Perhaps the most beautiful thing about this film is that it is made with love, but never becomes sentimental. Graf celebrates his grandmother not as a heroine, but as a human being – stubborn, funny, lonely, lively. His mother calls Rosa ‘sprightly and tough’. That sums it up. And Nonna is exactly that: a sprightly, tough film. Not a monument made of marble, but one made of everyday dust and soapy water. [...]",
-          "Nonna shows what happens when the great stories of Europe – migration, family, work, old age – shrink to the size of a kitchen with an oilcloth tablecloth. Tragic, funny, true."
+          "Nonna shows what happens when the great stories of Europe – Migration, family, work, old age – shrink to the size of a kitchen with an oilcloth tablecloth. Tragic, funny, true."
         ]
       }
     ],
@@ -80,6 +80,26 @@ export const TEXT_CONTENT: Content = {
     festivals: [
       "68. International Leipzig Festival for Documentary and Animated Film\nGerman Competition | 2025",
       "Stranger than Fiction Filmfest | 2026"
+    ],
+    pastEvents: [
+      {
+        title: "28. Stranger than Fiction Filmfest 2026"
+      },
+      {
+        title: "68. International Leipzig Festival for Documentary and Animated Film",
+        subtitle: "German Competition 2025"
+      }
+    ],
+    upcomingEvents: [
+      {
+        title: "Cinema-Tour 2026",
+        subtitle: "Dates to be announced"
+      }
+    ],
+    screenings: [
+      { city: "Berlin", cinema: "Delphi Lux", date: "15.05.2026", time: "20:00" },
+      { city: "Cologne", cinema: "Filmpalette", date: "20.05.2026", time: "19:00" },
+      { city: "Munich", cinema: "Monopol", date: "25.05.2026", time: "20:30" }
     ]
   },
   de: {
@@ -144,8 +164,28 @@ export const TEXT_CONTENT: Content = {
       subtitles: "Deutsch, Englisch, Italienisch"
     },
     festivals: [
-      "68. International Leipzig Festival for Documentary and Animated Film\nGerman Competition 2025",
+      "68. International Leipzig Festival for Documentary and Animated Film\nDeutscher Wettbewerb 2025",
       "Stranger than Fiction Filmfest 2026"
+    ],
+    pastEvents: [
+      {
+        title: "28. Stranger than Fiction Filmfest 2026"
+      },
+      {
+        title: "68. Internationales Leipziger Festival für Dokumentar- und Animationsfilm",
+        subtitle: "Deutscher Wettbewerb 2025"
+      }
+    ],
+    upcomingEvents: [
+      {
+        title: "Kinotour 2026",
+        subtitle: "Termine werden bekanntgegeben"
+      }
+    ],
+    screenings: [
+      { city: "Berlin", cinema: "Delphi Lux", date: "15.05.2026", time: "20:00" },
+      { city: "Köln", cinema: "Filmpalette", date: "20.05.2026", time: "19:00" },
+      { city: "München", cinema: "Monopol", date: "25.05.2026", time: "20:30" }
     ]
   }
 };

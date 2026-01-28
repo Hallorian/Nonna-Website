@@ -9,6 +9,8 @@ import { Navigation } from './components/Navigation';
 const ASSETS = {
   poster: 'assets/NON_Poster_NoCredits.jpg', // TODO_REPLACE_WITH_POSTER_IMAGE
   vincent: 'assets/Vincent-Graf.jpg',        // TODO_REPLACE_WITH_DIRECTOR_IMAGE
+  dok_logo: 'assets/DOK_Leipzig_Logo_dt.png',   // TODO_REPLACE_WITH_DOK_LOGO
+  dok_logo_en: 'assets/DOK_Leipzig_Logo_en.png', // TODO_REPLACE_WITH_DOK_LOGO_EN
   stills: [
     'assets/Nonna_Still_(c)_Vincent_Graf-1.jpg', // TODO_REPLACE_WITH_STILL_1
     'assets/Nonna_Still_(c)_Vincent_Graf-2.jpg', // TODO_REPLACE_WITH_STILL_2
@@ -17,6 +19,9 @@ const ASSETS = {
     'assets/Nonna_Still_(c)_Vincent_Graf-5.jpg'  // TODO_REPLACE_WITH_STILL_5
   ]
 };
+
+// CONTACT EMAIL ADDRESS
+const CONTACT_EMAIL = "hello@nonna-film.de"; // TODO: Change this to the real email address
 
 // Mapping for Technical Specs Translations
 const SPEC_LABELS: Record<Language, Record<string, string>> = {
@@ -30,7 +35,7 @@ const SPEC_LABELS: Record<Language, Record<string, string>> = {
     subtitles: "Subtitles"
   },
   de: {
-    duration: "Dauer",
+    duration: "Länge",
     resolution: "Auflösung",
     framerate: "Framerate",
     aspectRatio: "Seitenverhältnis",
@@ -40,8 +45,8 @@ const SPEC_LABELS: Record<Language, Record<string, string>> = {
   }
 };
 
-// All possible sections
-const ALL_SECTIONS = ['film', 'quotes', 'stills', 'director', 'credits'];
+// All possible sections - Reordered: Quotes comes before Events for Mobile
+const ALL_SECTIONS = ['film', 'quotes', 'events', 'stills', 'director', 'credits'];
 
 // --- REUSABLE COMPONENTS ---
 
@@ -346,9 +351,9 @@ const App: React.FC = () => {
     dragStartPos: 0
   });
 
-  // Contact Form state
-  const [formStatus, setFormStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle');
+  // Contact state
   const [showTrailer, setShowTrailer] = useState(false);
+  const [emailCopied, setEmailCopied] = useState(false);
   const touchStartY = useRef<number>(0);
 
   const content = TEXT_CONTENT[lang];
@@ -557,29 +562,41 @@ const App: React.FC = () => {
     }
   };
 
-  const handleContactSubmit = async (e: React.FormEvent) => {
-      e.preventDefault();
-      setFormStatus('sending');
-      
-      const form = e.target as HTMLFormElement;
-      const formData = new FormData(form);
-      const data = Object.fromEntries(formData.entries());
-
-      try {
-          // MOCK SIMULATION
-          await new Promise(resolve => setTimeout(resolve, 1500));
-          console.log("Mock Email Sent:", data);
-          setFormStatus('sent');
-      } catch (error) {
-          console.error("Error sending email:", error);
-          setFormStatus('error');
-          setTimeout(() => setFormStatus('idle'), 3000); 
-      }
+  const handleCopyEmail = () => {
+      navigator.clipboard.writeText(CONTACT_EMAIL);
+      setEmailCopied(true);
+      setTimeout(() => setEmailCopied(false), 2000);
   };
 
   const FestivalList = ({ className }: { className?: string }) => (
     <div className={`space-y-4 ${className}`}>
         {content.festivals.map((fest, i) => {
+            // Replacement for DOK Leipzig Text with Logo in DE Version (1st item)
+            if (lang === 'de' && i === 0) {
+                 return (
+                     <div key={i} className="py-2">
+                         <img 
+                            src={ASSETS.dok_logo} 
+                            alt="DOK Leipzig Logo" 
+                            className="h-20 w-auto object-contain max-w-[200px]" 
+                         />
+                     </div>
+                 );
+            }
+
+            // Replacement for DOK Leipzig Text with Logo in EN Version (1st item)
+            if (lang === 'en' && i === 0) {
+                 return (
+                     <div key={i} className="py-2">
+                         <img 
+                            src={ASSETS.dok_logo_en} 
+                            alt="DOK Leipzig Logo" 
+                            className="h-20 w-auto object-contain max-w-[200px]" 
+                         />
+                     </div>
+                 );
+            }
+
             const parts = fest.split('\n');
             const name = parts[0];
             const details = parts.slice(1).join('\n');
@@ -604,6 +621,55 @@ const App: React.FC = () => {
   for (let i = 0; i < ASSETS.stills.length; i += 2) {
     portraitStillsChunks.push(ASSETS.stills.slice(i, i + 2));
   }
+  
+  // Logic for Events Section Limiting
+  const MAX_UPCOMING = 3;
+  const MAX_PAST = 2;
+  const MAX_SCREENINGS = 6;
+  
+  const visibleUpcoming = content.upcomingEvents.slice(0, MAX_UPCOMING);
+  const showUpcomingMore = content.upcomingEvents.length > MAX_UPCOMING;
+  
+  const visiblePast = content.pastEvents.slice(0, MAX_PAST);
+  const showPastMore = content.pastEvents.length > MAX_PAST;
+  
+  const visibleScreenings = content.screenings.slice(0, MAX_SCREENINGS);
+  const showScreeningsMore = content.screenings.length > MAX_SCREENINGS;
+
+  // REUSABLE CONTACT UI (Used in Modal and Section)
+  const ContactContent = () => (
+      <div className="flex flex-col items-center justify-center py-6 space-y-8 text-center w-full">
+        <p className="text-stone-500 font-serif italic text-lg">
+            {lang === 'en' ? 'For inquiries please contact:' : 'Für Anfragen wenden Sie sich bitte an:'}
+        </p>
+        
+        {/* Email Display & Copy Trigger */}
+        <div 
+            onClick={handleCopyEmail}
+            className="group cursor-pointer relative"
+        >
+            <h3 className="text-2xl md:text-5xl font-serif text-stone-900 group-hover:text-[#F8C300] transition-colors duration-300 break-all md:break-normal">
+                {CONTACT_EMAIL}
+            </h3>
+            
+            {/* Tooltip/Feedback */}
+            <div className={`absolute -bottom-8 left-1/2 -translate-x-1/2 text-xs font-bold uppercase tracking-widest transition-opacity duration-300 whitespace-nowrap ${emailCopied ? 'text-green-600 opacity-100' : 'text-stone-400 opacity-0 group-hover:opacity-100'}`}>
+                {emailCopied 
+                    ? (lang === 'en' ? 'Copied to clipboard!' : 'In Zwischenablage kopiert!') 
+                    : (lang === 'en' ? 'Click to copy' : 'Klicken zum Kopieren')
+                }
+            </div>
+        </div>
+
+        {/* Mailto Button */}
+        <a 
+            href={`mailto:${CONTACT_EMAIL}`}
+            className="inline-block bg-stone-900 text-white px-10 py-4 uppercase tracking-widest text-xs font-bold hover:bg-[#F8C300] hover:text-black transition-all duration-300 mt-8"
+        >
+            {lang === 'en' ? 'Open Mail Client' : 'Mailprogramm öffnen'}
+        </a>
+      </div>
+  );
 
   return (
     <div className="bg-[#f5f5f4] h-screen w-screen text-[#1c1917] overflow-hidden relative">
@@ -619,7 +685,7 @@ const App: React.FC = () => {
         <div className="fixed inset-0 z-[110] bg-black/90 flex items-center justify-center p-4" onClick={() => setShowTrailer(false)}>
            <div className="relative w-full max-w-5xl bg-black shadow-2xl border border-stone-800" onClick={(e) => e.stopPropagation()}>
                <button onClick={() => setShowTrailer(false)} className="absolute -top-12 right-0 text-white/70 hover:text-[#F8C300] flex items-center gap-2 uppercase text-xs tracking-widest font-bold">
-                   Close <span className="text-xl leading-none">&times;</span>
+                   {lang === 'en' ? "Close" : "Schließen"} <span className="text-xl leading-none">&times;</span>
                </button>
                <div style={{padding:'54.05% 0 0 0', position:'relative'}}>
                    <iframe src={trailerSrc} frameBorder="0" allow="autoplay; fullscreen; picture-in-picture; clipboard-write; encrypted-media; web-share" referrerPolicy="strict-origin-when-cross-origin" style={{position:'absolute',top:0,left:0,width:'100%',height:'100%'}} title={trailerTitle}></iframe>
@@ -646,7 +712,7 @@ const App: React.FC = () => {
           <FestivalList />
       </FullScreenModal>
 
-      <FullScreenModal isOpen={activeModal === 'statement'} onClose={() => setActiveModal(null)} title="Director's Statement">
+      <FullScreenModal isOpen={activeModal === 'statement'} onClose={() => setActiveModal(null)} title={lang === 'en' ? "Director's Statement" : "Regie-Statement"}>
           <p className="text-lg leading-relaxed text-stone-600">{content.directorStatement}</p>
       </FullScreenModal>
 
@@ -684,37 +750,58 @@ const App: React.FC = () => {
          </div>
       </FullScreenModal>
 
-      {/* Contact Form Modal */}
+      {/* --- NEW MODALS FOR EVENTS --- */}
+      <FullScreenModal isOpen={activeModal === 'upcoming_events'} onClose={() => setActiveModal(null)} title={lang === 'en' ? 'Upcoming Events' : 'Anstehende Termine'}>
+          <div className="space-y-8">
+               {content.upcomingEvents.map((evt, i) => (
+                   <div key={i} className="border-b border-stone-200 pb-4">
+                       <div className="font-serif text-2xl font-bold">{evt.title}</div>
+                       {evt.subtitle && <div className="text-base uppercase tracking-widest text-stone-500 mt-2">{evt.subtitle}</div>}
+                       {evt.date && <div className="text-base font-mono text-stone-400 mt-1">{evt.date}</div>}
+                   </div>
+               ))}
+          </div>
+      </FullScreenModal>
+
+      <FullScreenModal isOpen={activeModal === 'past_events'} onClose={() => setActiveModal(null)} title={lang === 'en' ? 'Past Events' : 'Vergangene Termine'}>
+          <div className="space-y-8 opacity-90">
+               {content.pastEvents.map((evt, i) => (
+                   <div key={i} className="border-b border-stone-200 pb-4">
+                       <div className="font-serif text-xl">{evt.title}</div>
+                       {evt.subtitle && <div className="text-sm uppercase tracking-widest text-stone-500 mt-2">{evt.subtitle}</div>}
+                       {evt.date && <div className="text-sm font-mono text-stone-400 mt-1">{evt.date}</div>}
+                   </div>
+               ))}
+          </div>
+      </FullScreenModal>
+
+      <FullScreenModal isOpen={activeModal === 'all_screenings'} onClose={() => setActiveModal(null)} title={lang === 'en' ? 'Cinema Screenings' : 'Kinovorstellungen'}>
+          <div className="space-y-4">
+              {content.screenings.map((screening, i) => {
+                  const Wrapper = screening.link ? 'a' : 'div';
+                  const props = screening.link ? { href: screening.link, target: "_blank", rel: "noreferrer" } : {};
+                  return (
+                      <Wrapper key={i} {...props} className="block group border-b border-stone-100 py-6 hover:bg-stone-50 transition-colors cursor-pointer relative">
+                          <div className="flex justify-between items-baseline mb-2">
+                              <span className="font-serif text-2xl group-hover:text-[#F8C300] transition-colors">{screening.city}</span>
+                              <span className="font-mono text-base text-stone-500">{screening.date} | {screening.time}</span>
+                          </div>
+                          <div className="text-base uppercase tracking-widest text-stone-500 flex justify-between items-center">
+                              <span>{screening.cinema}</span>
+                              {screening.link && (
+                                  <span className="text-[#F8C300] text-xs font-bold">TICKETS &rarr;</span>
+                              )}
+                          </div>
+                      </Wrapper>
+                  );
+              })}
+          </div>
+      </FullScreenModal>
+
+      {/* Contact Form Modal - UPDATED TO SIMPLE EMAIL DISPLAY */}
       <FullScreenModal isOpen={activeModal === 'contact'} onClose={() => setActiveModal(null)} title={lang === 'en' ? 'Get in Touch' : 'Kontakt'}>
-         <div className="p-4 bg-white shadow-none md:shadow-lg mt-4 max-w-2xl mx-auto">
-             {formStatus === 'sent' ? (
-                 <div className="text-center italic font-serif py-12 text-xl text-[#F8C300] bg-stone-50">
-                    {lang === 'en' ? 'Thank you. Your message has been sent.' : 'Danke. Ihre Nachricht wurde versendet.'}
-                 </div>
-             ) : (
-                 <form onSubmit={handleContactSubmit} className="space-y-6">
-                     <div>
-                        <label className="block text-xs uppercase tracking-widest text-stone-400 mb-2">{lang === 'en' ? 'Your Email' : 'Deine Email'}</label>
-                        <input name="email" type="email" required className="w-full border-b border-stone-200 py-2 focus:outline-none focus:border-[#F8C300] transition-colors bg-transparent" />
-                     </div>
-                     <div>
-                        <label className="block text-xs uppercase tracking-widest text-stone-400 mb-2">{lang === 'en' ? 'Subject' : 'Betreff'}</label>
-                        <input name="subject" type="text" required className="w-full border-b border-stone-200 py-2 focus:outline-none focus:border-[#F8C300] transition-colors bg-transparent" />
-                     </div>
-                     <div>
-                        <label className="block text-xs uppercase tracking-widest text-stone-400 mb-2">{lang === 'en' ? 'Message' : 'Nachricht'}</label>
-                        <textarea name="message" rows={5} required className="w-full border-b border-stone-200 py-2 focus:outline-none focus:border-[#F8C300] transition-colors resize-none bg-transparent"></textarea>
-                     </div>
-                     <button type="submit" disabled={formStatus === 'sending'} className="w-full bg-stone-900 text-white py-4 uppercase text-xs font-bold hover:bg-[#F8C300] hover:text-black transition-colors disabled:opacity-50">
-                         {formStatus === 'sending' ? (lang === 'en' ? 'Sending...' : 'Senden...') : (lang === 'en' ? 'Send Message' : 'Absenden')}
-                     </button>
-                     {formStatus === 'error' && (
-                         <p className="text-red-500 text-xs text-center uppercase tracking-widest mt-2">
-                             {lang === 'en' ? 'Something went wrong. Please try again.' : 'Etwas ist schiefgelaufen. Bitte versuche es erneut.'}
-                         </p>
-                     )}
-                 </form>
-             )}
+         <div className="p-4 bg-white shadow-none md:shadow-lg mt-4 max-w-2xl mx-auto min-h-[50vh] flex items-center justify-center">
+             <ContactContent />
          </div>
       </FullScreenModal>
 
@@ -724,10 +811,10 @@ const App: React.FC = () => {
       <button
           onClick={() => setActiveModal('contact')}
           className={`
-            fixed right-6 bottom-6 z-[60] bg-[#F8C300] text-stone-900 
+            fixed right-6 bottom-6 z-[60] text-stone-900 
             w-12 h-12 rounded-full flex items-center justify-center shadow-xl
             hover:bg-stone-900 hover:text-[#F8C300] transition-all duration-1000 ease-in-out
-            ${activeSection === 'quotes' ? 'bg-white' : ''}
+            ${(activeSection === 'quotes' || activeSection === 'film') ? 'bg-white' : 'bg-[#F8C300]'}
             ${activeSection === 'credits' ? 'opacity-0 translate-y-10 pointer-events-none' : 'opacity-100 translate-y-0 pointer-events-auto'}
           `}
       >
@@ -756,7 +843,7 @@ const App: React.FC = () => {
                     </h2>
                  </div>
                  <div className="grid grid-cols-2 gap-3 landscape:gap-y-4 landscape:gap-x-3 landscape:pb-6">
-                     <button onClick={() => setShowTrailer(true)} className="col-span-2 bg-stone-900 text-white py-3 landscape:py-2 uppercase tracking-widest text-xs font-bold">Watch Trailer</button>
+                     <button onClick={() => setShowTrailer(true)} className="col-span-2 bg-stone-900 text-white py-3 landscape:py-2 uppercase tracking-widest text-xs font-bold">{lang === 'en' ? "Watch Trailer" : "Trailer ansehen"}</button>
                      <button onClick={() => setActiveModal('synopsis')} className="border border-stone-300 py-3 landscape:py-2 uppercase tracking-widest text-xs hover:bg-[#F8C300] transition-colors">Synopsis</button>
                      <button onClick={() => setActiveModal('festivals')} className="border border-stone-300 py-3 landscape:py-2 uppercase tracking-widest text-xs hover:bg-[#F8C300] transition-colors">Festivals</button>
                  </div>
@@ -783,12 +870,26 @@ const App: React.FC = () => {
                       </div>
                       <div className="pt-4 pb-2 shrink-0">
                           <button onClick={() => setShowTrailer(true)} className="inline-flex items-center space-x-3 bg-stone-900 text-white px-8 py-4 rounded-sm hover:bg-[#F8C300] hover:text-stone-900 transition-colors duration-300">
-                            <span className="uppercase tracking-widest text-sm">Watch Trailer</span>
+                            <span className="uppercase tracking-widest text-sm">{lang === 'en' ? "Watch Trailer" : "Trailer ansehen"}</span>
                           </button>
                       </div>
                   </div>
                 </div>
              </div>
+          </div>
+            
+          {/* QUOTES LABEL for Marquee Strip */}
+          <div className="hidden md:block absolute bottom-52 left-0 w-full z-30 pointer-events-none">
+              <div className="max-w-7xl mx-auto w-full px-20 flex justify-end">
+                   <div className="flex items-center gap-3">
+                       <span className="text-[#F8C300] text-2xl font-serif italic drop-shadow-sm">
+                           {lang === 'en' ? 'Press Quotes' : 'Pressestimmen'}
+                       </span>
+                       <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="#F8C300" className="w-6 h-6 drop-shadow-sm">
+                           <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+                       </svg>
+                   </div>
+              </div>
           </div>
 
           <div 
@@ -814,7 +915,7 @@ const App: React.FC = () => {
           </div>
         </section>
 
-        {/* SECTION 1: QUOTES (Mobile Only) */}
+        {/* SECTION 1: QUOTES (Mobile Only) - Moved here to be the second section on Mobile */}
         {visibleSections.includes('quotes') && (
             <section className="h-screen w-full bg-[#F8C300] flex items-center justify-center px-6 md:px-20 relative overflow-hidden">
                 <div className="md:hidden w-full h-full pt-16 pb-20 landscape:pb-4">
@@ -842,7 +943,110 @@ const App: React.FC = () => {
             </section>
         )}
 
-        {/* SECTION 2: STILLS */}
+        {/* SECTION 2: EVENTS & SCREENINGS */}
+        <section className="h-screen w-full bg-white flex items-center justify-center px-6 md:px-20 overflow-hidden text-stone-900">
+            <div className="max-w-7xl mx-auto w-full h-full max-h-[90vh] flex flex-col pt-16 md:pt-10">
+                
+                {/* Mobile View: Modal Buttons Only */}
+                <div className="md:hidden w-full h-full flex flex-col justify-center px-6 pt-16 pb-20 space-y-4 landscape:justify-center landscape:pt-0 landscape:pb-0 landscape:h-full landscape:overflow-y-auto">
+                    <ModalButton 
+                        label={lang === 'en' ? 'Upcoming Events' : 'Anstehende Termine'} 
+                        onClick={() => setActiveModal('upcoming_events')} 
+                    />
+                    <ModalButton 
+                        label={lang === 'en' ? 'Past Events' : 'Vergangene Termine'} 
+                        onClick={() => setActiveModal('past_events')} 
+                    />
+                    <ModalButton 
+                        label={lang === 'en' ? 'Cinema Screenings' : 'Kinovorstellungen'} 
+                        onClick={() => setActiveModal('all_screenings')} 
+                    />
+                </div>
+
+                {/* Desktop View: Split Layout (Hidden on Mobile) */}
+                <div className="hidden md:flex flex-1 flex-col md:flex-row gap-12 pb-20 overflow-hidden">
+                    {/* LEFT COL: FESTIVALS / EVENTS */}
+                    <div className="flex-1 space-y-12 overflow-hidden flex flex-col justify-start">
+                         <div>
+                             <h2 className="text-3xl md:text-5xl font-serif text-stone-900 mb-10 border-b-4 border-[#F8C300] pb-2 inline-block">{lang === 'en' ? 'Upcoming Events' : 'Anstehende Termine'}</h2>
+                             {content.upcomingEvents.length > 0 ? (
+                                 <div className="space-y-6">
+                                     {visibleUpcoming.map((evt, i) => (
+                                         <div key={i}>
+                                             <div className="font-serif text-xl font-bold">{evt.title}</div>
+                                             {evt.subtitle && <div className="text-sm uppercase tracking-widest text-stone-500 mt-1">{evt.subtitle}</div>}
+                                             {evt.date && <div className="text-sm font-mono text-stone-400 mt-1">{evt.date}</div>}
+                                         </div>
+                                     ))}
+                                     {showUpcomingMore && (
+                                         <button onClick={() => setActiveModal('upcoming_events')} className="text-[#F8C300] font-bold uppercase text-xs tracking-widest mt-4 cursor-pointer hover:underline">
+                                             {lang === 'en' ? 'More upcoming events...' : 'Mehr Termine...'}
+                                         </button>
+                                     )}
+                                 </div>
+                             ) : (
+                                 <p className="text-stone-400 italic font-serif">{lang === 'en' ? 'No upcoming events at the moment.' : 'Momentan keine anstehenden Termine.'}</p>
+                             )}
+                         </div>
+
+                         <div>
+                             <h3 className="text-xl md:text-2xl font-serif font-bold text-stone-400 mb-6 border-b border-stone-100 pb-2 inline-block">{lang === 'en' ? 'Past Events' : 'Vergangene Termine'}</h3>
+                             <div className="space-y-6 opacity-70">
+                                 {visiblePast.map((evt, i) => (
+                                     <div key={i}>
+                                         <div className="font-serif text-lg">{evt.title}</div>
+                                         {evt.subtitle && <div className="text-xs uppercase tracking-widest text-stone-500 mt-1">{evt.subtitle}</div>}
+                                         {evt.date && <div className="text-xs font-mono text-stone-400 mt-1">{evt.date}</div>}
+                                     </div>
+                                 ))}
+                                 {showPastMore && (
+                                     <button onClick={() => setActiveModal('past_events')} className="text-stone-400 font-bold uppercase text-xs tracking-widest mt-4 cursor-pointer hover:underline">
+                                         {lang === 'en' ? 'Show all past events...' : 'Alle vergangenen Termine...'}
+                                     </button>
+                                 )}
+                             </div>
+                         </div>
+                    </div>
+
+                    {/* RIGHT COL: CINEMA SCREENINGS */}
+                    <div className="flex-1 overflow-hidden">
+                        <h2 className="text-3xl md:text-5xl font-serif text-stone-900 mb-10 border-b-4 border-[#F8C300] pb-2 inline-block">{lang === 'en' ? 'Cinema Screenings' : 'Kinovorstellungen'}</h2>
+                        {content.screenings.length > 0 ? (
+                            <div className="space-y-2">
+                                {visibleScreenings.map((screening, i) => {
+                                    // Make entire row a link if available
+                                    const Wrapper = screening.link ? 'a' : 'div';
+                                    const props = screening.link ? { href: screening.link, target: "_blank", rel: "noreferrer" } : {};
+                                    return (
+                                        <Wrapper key={i} {...props} className="block group border-b border-stone-100 py-4 hover:bg-stone-50 transition-colors cursor-pointer relative">
+                                            <div className="flex justify-between items-baseline mb-1">
+                                                <span className="font-serif text-xl group-hover:text-[#F8C300] transition-colors">{screening.city}</span>
+                                                <span className="font-mono text-sm text-stone-500">{screening.date} | {screening.time}</span>
+                                            </div>
+                                            <div className="text-sm uppercase tracking-widest text-stone-500 flex justify-between items-center">
+                                                <span>{screening.cinema}</span>
+                                                {screening.link && (
+                                                    <span className="text-[#F8C300] text-[10px] font-bold">TICKETS &rarr;</span>
+                                                )}
+                                            </div>
+                                        </Wrapper>
+                                    );
+                                })}
+                                {showScreeningsMore && (
+                                     <button onClick={() => setActiveModal('all_screenings')} className="text-[#F8C300] font-bold uppercase text-xs tracking-widest mt-6 cursor-pointer hover:underline block w-full text-right">
+                                         {lang === 'en' ? 'Show all screenings...' : 'Alle Vorstellungen anzeigen...'}
+                                     </button>
+                                )}
+                            </div>
+                        ) : (
+                             <p className="text-stone-400 italic font-serif">{lang === 'en' ? 'Check back soon for screening dates.' : 'Schauen Sie bald wieder vorbei für neue Spieltermine.'}</p>
+                        )}
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        {/* SECTION 3 (was 2): STILLS */}
         <section className="h-screen w-full bg-stone-900 flex flex-col justify-center relative overflow-hidden">
             
             {/* MOBILE WRAPPER - Explicitly hidden on desktop (md) to prevent landscape overlap */}
@@ -939,7 +1143,7 @@ const App: React.FC = () => {
             </div>
         </section>
 
-        {/* SECTION 3: DIRECTOR */}
+        {/* SECTION 4 (was 3): DIRECTOR */}
         <section className="h-screen w-full bg-white flex items-center justify-center px-6 md:px-20 overflow-hidden">
             <div className="md:hidden w-full h-full flex flex-col landscape:flex-row justify-center landscape:items-center pt-16 pb-24 landscape:pb-0">
                 <div className="relative mb-8 landscape:mb-0 mx-auto w-48 h-48 landscape:w-1/3 landscape:h-full landscape:mx-0 landscape:max-w-xs">
@@ -947,7 +1151,7 @@ const App: React.FC = () => {
                     <div className="absolute inset-0 border-2 border-[#F8C300] rounded-full translate-x-2 translate-y-2 -z-10 landscape:hidden"></div>
                 </div>
                 <div className="space-y-4 w-full landscape:w-2/3 landscape:pl-8 landscape:pr-20 landscape:pb-16 landscape:overflow-y-auto landscape:max-h-[80vh]">
-                    <ModalButton label="Director's Statement" onClick={() => setActiveModal('statement')} />
+                    <ModalButton label={lang === 'en' ? "Director's Statement" : "Regie-Statement"} onClick={() => setActiveModal('statement')} />
                     <ModalButton label={lang === 'en' ? "Biography" : "Biografie"} onClick={() => setActiveModal('bio')} />
                     <ModalButton label={lang === 'en' ? "Filmography" : "Filmografie"} onClick={() => setActiveModal('filmography')} />
                 </div>
@@ -958,7 +1162,7 @@ const App: React.FC = () => {
                     <div className="absolute -bottom-6 -left-6 w-full h-full border-2 border-[#F8C300] pointer-events-none"></div>
                 </div>
                 <div className="order-1 md:order-2 space-y-8 overflow-y-auto max-h-full pr-2 pb-10">
-                    <h2 className="text-5xl font-serif">Director's Statement</h2>
+                    <h2 className="text-5xl font-serif">{lang === 'en' ? "Director's Statement" : "Regie-Statement"}</h2>
                     <p className="text-lg leading-relaxed text-stone-600">{content.directorStatement}</p>
                     <div className="pt-8">
                         <h3 className="text-xl font-serif mb-2">{lang === 'en' ? "Bio" : "Biografie"}</h3>
@@ -974,7 +1178,7 @@ const App: React.FC = () => {
             </div>
         </section>
 
-        {/* SECTION 4: CREDITS & CONTACT */}
+        {/* SECTION 5 (was 4): CREDITS & CONTACT */}
         <section className="h-screen w-full bg-[#f5f5f4] flex items-center justify-center px-6 md:px-20 overflow-hidden">
              <div className="max-w-7xl mx-auto w-full flex flex-col h-full max-h-[95vh] pt-20 md:pt-10">
                 <div className="md:hidden flex-1 flex flex-col justify-center space-y-8 pb-20 landscape:justify-start landscape:pt-4">
@@ -1012,46 +1216,16 @@ const App: React.FC = () => {
                              </div>
                         </div>
                     </div>
+                    {/* NEW SIMPLIFIED CONTACT UI IN DESKTOP VIEW */}
                     <div className="w-full max-w-3xl mx-auto bg-white p-12 shadow-xl mb-8 mt-24 relative">
                          <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-[#F8C300] text-black px-4 py-1 text-xs font-bold tracking-[0.2em] uppercase">
                             {lang === 'en' ? 'Get in Touch' : 'Kontakt aufnehmen'}
                          </div>
-                         {formStatus === 'sent' ? (
-                             <div className="p-8 bg-[#F8C300]/20 border border-[#F8C300] text-stone-900 font-serif text-2xl text-center italic">
-                                 {lang === 'en' ? 'Thank you. Your message has been sent.' : 'Danke. Ihre Nachricht wurde versendet.'}
-                             </div>
-                         ) : (
-                             <form onSubmit={handleContactSubmit} className="space-y-8">
-                                 <div className="grid grid-cols-2 gap-8">
-                                     <div className="group">
-                                        <label className="block text-xs uppercase tracking-widest text-stone-400 mb-2 group-focus-within:text-[#F8C300] transition-colors">Email</label>
-                                        <input name="email" type="email" required className="w-full bg-stone-50 border-b-2 border-stone-200 py-3 px-2 text-stone-900 placeholder-stone-400 focus:outline-none focus:border-[#F8C300] focus:bg-white transition-all"/>
-                                     </div>
-                                     <div className="group">
-                                        <label className="block text-xs uppercase tracking-widest text-stone-400 mb-2 group-focus-within:text-[#F8C300] transition-colors">{lang === 'en' ? 'Subject' : 'Betreff'}</label>
-                                        <input name="subject" type="text" className="w-full bg-stone-50 border-b-2 border-stone-200 py-3 px-2 text-stone-900 placeholder-stone-400 focus:outline-none focus:border-[#F8C300] focus:bg-white transition-all"/>
-                                     </div>
-                                 </div>
-                                 <div className="group">
-                                     <label className="block text-xs uppercase tracking-widest text-stone-400 mb-2 group-focus-within:text-[#F8C300] transition-colors">{lang === 'en' ? 'Message' : 'Nachricht'}</label>
-                                     <textarea name="message" required rows={3} className="w-full bg-stone-50 border-b-2 border-stone-200 py-3 px-2 text-stone-900 placeholder-stone-400 focus:outline-none focus:border-[#F8C300] focus:bg-white transition-all resize-none"></textarea>
-                                 </div>
-                                 <div className="text-center">
-                                    <button type="submit" disabled={formStatus === 'sending'} className="inline-block bg-stone-900 text-white px-10 py-3 uppercase tracking-widest text-xs font-bold hover:bg-[#F8C300] hover:text-black transition-all duration-300 disabled:opacity-50">
-                                        {formStatus === 'sending' ? (lang === 'en' ? 'Sending...' : 'Senden...') : (lang === 'en' ? 'Send Message' : 'Absenden')}
-                                    </button>
-                                    {formStatus === 'error' && (
-                                        <p className="text-red-500 text-xs text-center uppercase tracking-widest mt-2">
-                                            {lang === 'en' ? 'Something went wrong. Please try again.' : 'Etwas ist schiefgelaufen. Bitte versuche es erneut.'}
-                                        </p>
-                                    )}
-                                 </div>
-                             </form>
-                         )}
+                         <ContactContent />
                     </div>
                 </div>
                 <footer className="py-6 text-center text-stone-400 text-xs uppercase tracking-widest shrink-0 border-t border-stone-200">
-                    © {new Date().getFullYear()} NONNA - A film by Vincent Graf
+                    © {new Date().getFullYear()} NONNA - {lang === 'en' ? "A film by" : "Ein Film von"} Vincent Graf
                 </footer>
             </div>
         </section>
